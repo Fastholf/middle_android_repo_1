@@ -2,8 +2,12 @@ package ru.yandexpraktikum.cardsanimation.views
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.widget.FrameLayout
 import ru.yandexpraktikum.cardsanimation.model.CardData
+import kotlin.math.abs
 
 class AnimatedCardStackView @JvmOverloads constructor(
     context: Context,
@@ -87,6 +91,49 @@ class AnimatedCardStackView @JvmOverloads constructor(
         }
     }
 
+    private val gestureDetector = GestureDetector(
+        context,
+        object : GestureDetector.SimpleOnGestureListener() {
+            override fun onScroll(
+                e1: MotionEvent?,
+                e2: MotionEvent,
+                distanceX: Float,
+                distanceY: Float
+            ): Boolean {
+                // TODO: Temporary logs for Task 2 checks, remove later
+                if (e1 == null) {
+                    Log.d("TASK2", "Scroll event stream broke down")
+                } else {
+                    val isHorizonalScroll = abs(e1.x - e2.x) > abs(e1.y - e2.y)
+                    Log.d(
+                        "TASK2",
+                        "Scrolling " + if (isHorizonalScroll) "horizontally" else "vertically"
+                    )
+                }
+                return super.onScroll(e1, e2, distanceX, distanceY)
+            }
+
+            override fun onFling(
+                e1: MotionEvent?,
+                e2: MotionEvent,
+                velocityX: Float,
+                velocityY: Float
+            ): Boolean {
+                // TODO: Temporary logs for Task 2 checks, remove later
+                val isHorizonalFling = abs(velocityX) > abs(velocityY)
+                Log.d(
+                    "TASK2",
+                    if (isHorizonalFling) "Horizontal" else "Vertical" + " fling happened"
+                )
+                return super.onFling(e1, e2, velocityX, velocityY)
+            }
+        }
+    )
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event)
+    }
+
     private fun startCardSwapAnimation(bottomCard: AnimatedCardView) {
         // TODO: [Задание 5] Добавьте анимацию перетасовки карт
         // На данном этапе просто быстро двигаем нижнюю карту наверх
@@ -98,8 +145,6 @@ class AnimatedCardStackView @JvmOverloads constructor(
     fun reorderCards(cards: List<CardData>): List<CardData> {
         return cards.drop(1) + cards.first()
     }
-    // TODO: [Задание 2] Добавьте обработку жестов
-    // Подсказка: Используйте GestureDetector с методом onFling для обработки свайпов
 
     // TODO: [Задание 3] Добавьте обработку вертикальных свайпов (вверх/вниз)
 
