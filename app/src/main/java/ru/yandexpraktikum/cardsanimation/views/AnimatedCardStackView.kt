@@ -2,12 +2,10 @@ package ru.yandexpraktikum.cardsanimation.views
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.widget.FrameLayout
 import ru.yandexpraktikum.cardsanimation.model.CardData
-import kotlin.math.abs
 
 class AnimatedCardStackView @JvmOverloads constructor(
     context: Context,
@@ -22,11 +20,6 @@ class AnimatedCardStackView @JvmOverloads constructor(
     fun setCards(newCardDataList: List<CardData>) {
         cardDataList = newCardDataList
         setupCards()
-        // TODO: Temporary for Task 1 checks, remove later
-        setOnClickListener {
-            isRotated = !isRotated
-            updateCardPositions()
-        }
     }
 
     private fun setupCards() {
@@ -100,16 +93,6 @@ class AnimatedCardStackView @JvmOverloads constructor(
                 distanceX: Float,
                 distanceY: Float
             ): Boolean {
-                // TODO: Temporary logs for Task 2 checks, remove later
-                if (e1 == null) {
-                    Log.d("TASK2", "Scroll event stream broke down")
-                } else {
-                    val isHorizonalScroll = abs(e1.x - e2.x) > abs(e1.y - e2.y)
-                    Log.d(
-                        "TASK2",
-                        "Scrolling " + if (isHorizonalScroll) "horizontally" else "vertically"
-                    )
-                }
                 return super.onScroll(e1, e2, distanceX, distanceY)
             }
 
@@ -119,12 +102,6 @@ class AnimatedCardStackView @JvmOverloads constructor(
                 velocityX: Float,
                 velocityY: Float
             ): Boolean {
-                // TODO: Temporary logs for Task 2 checks, remove later
-                val isHorizonalFling = abs(velocityX) > abs(velocityY)
-                Log.d(
-                    "TASK2",
-                    if (isHorizonalFling) "Horizontal" else "Vertical" + " fling happened"
-                )
                 return super.onFling(e1, e2, velocityX, velocityY)
             }
         }
