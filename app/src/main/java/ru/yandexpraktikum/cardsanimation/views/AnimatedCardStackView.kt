@@ -1,11 +1,13 @@
 package ru.yandexpraktikum.cardsanimation.views
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.widget.FrameLayout
 import ru.yandexpraktikum.cardsanimation.model.CardData
+import kotlin.math.abs
 
 class AnimatedCardStackView @JvmOverloads constructor(
     context: Context,
@@ -16,6 +18,23 @@ class AnimatedCardStackView @JvmOverloads constructor(
     private var cardDataList: List<CardData> = emptyList()
     private val cards = mutableListOf<AnimatedCardView>()
     private var isRotated = false
+    private val offsetThreshold = 75f
+    private var verticalDragOffset = 0f
+    private var flingDetected = false
+
+    init {
+        @SuppressLint("ClickableViewAccessibility")
+        setOnTouchListener { _, event ->
+            var handled = gestureDetector.onTouchEvent(event)
+            if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
+                if (!flingDetected && abs(verticalDragOffset) > offsetThreshold) {
+                    toggleStack(open = verticalDragOffset > 0)
+                    handled = true
+                }
+            }
+            handled
+        }
+    }
 
     fun setCards(newCardDataList: List<CardData>) {
         cardDataList = newCardDataList
@@ -87,13 +106,20 @@ class AnimatedCardStackView @JvmOverloads constructor(
     private val gestureDetector = GestureDetector(
         context,
         object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDown(e: MotionEvent): Boolean {
+                verticalDragOffset = 0f
+                flingDetected = false
+                return true
+            }
+
             override fun onScroll(
                 e1: MotionEvent?,
                 e2: MotionEvent,
                 distanceX: Float,
                 distanceY: Float
             ): Boolean {
-                return super.onScroll(e1, e2, distanceX, distanceY)
+                verticalDragOffset += distanceY
+                return true
             }
 
             override fun onFling(
@@ -102,13 +128,20 @@ class AnimatedCardStackView @JvmOverloads constructor(
                 velocityX: Float,
                 velocityY: Float
             ): Boolean {
+                flingDetected = true
+                val isVertical = abs(velocityY) > abs(velocityX)
+                if (isVertical) {
+                    toggleStack(open = velocityY < 0)
+                    return true
+                }
                 return super.onFling(e1, e2, velocityX, velocityY)
             }
         }
     )
 
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event)
+    private fun toggleStack(open: Boolean) {
+        isRotated = open
+        updateCardPositions()
     }
 
     private fun startCardSwapAnimation(bottomCard: AnimatedCardView) {
@@ -122,8 +155,6 @@ class AnimatedCardStackView @JvmOverloads constructor(
     fun reorderCards(cards: List<CardData>): List<CardData> {
         return cards.drop(1) + cards.first()
     }
-
-    // TODO: [Задание 3] Добавьте обработку вертикальных свайпов (вверх/вниз)
 
     // TODO: [Задание 4] Добавьте обработку горизонтальных свайпов (влево/вправо)
 }

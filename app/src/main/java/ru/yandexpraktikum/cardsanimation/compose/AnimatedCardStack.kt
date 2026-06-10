@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,15 +36,20 @@ fun calculateCardRotation(
 @Composable
 fun AnimatedCardStack(cards: List<CardData>) {
     val cardCount = cards.size
+    val offsetThreshold = 75f
     var isRotated by remember { mutableStateOf(false) }
+    var verticalDragOffset by remember { mutableFloatStateOf(0f) }
 
     Box(
         modifier = Modifier
             .pointerInput(Unit) {
                 detectDragGestures(
-                    onDragStart = { },
-                    onDrag = { change, dragAmount -> },
-                    onDragEnd = { }
+                    onDragStart = { verticalDragOffset = 0f },
+                    onDrag = { _, dragAmount -> verticalDragOffset += dragAmount.y },
+                    onDragEnd = {
+                        if (verticalDragOffset < -offsetThreshold) isRotated = true
+                        if (verticalDragOffset > offsetThreshold) isRotated = false
+                    }
                 )
             },
         contentAlignment = Alignment.Center
