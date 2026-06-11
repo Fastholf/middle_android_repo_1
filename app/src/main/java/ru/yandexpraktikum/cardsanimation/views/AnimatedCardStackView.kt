@@ -151,7 +151,7 @@ class AnimatedCardStackView @JvmOverloads constructor(
                 if (isVertical) {
                     toggleStack(open = velocityY < 0)
                 } else {
-                    startCardSwapAnimation(cards.last())
+                    startCardSwapAnimation(cards.first())
                 }
                 return true
             }
@@ -168,12 +168,9 @@ class AnimatedCardStackView @JvmOverloads constructor(
 
         animationState = CardSwapAnimationState(true, 1)
 
-        // TODO: [Задание 5] Добавьте анимацию перетасовки карт
-        // На данном этапе просто быстро двигаем нижнюю карту наверх
-        cardDataList = reorderCards(cardDataList)
-        setupCards()
-
-        animationState = CardSwapAnimationState()
+        bottomCard.moveCardRight {
+            animationState = CardSwapAnimationState()
+        }
     }
 
     // Простая функция перестановки карт

@@ -58,7 +58,10 @@ fun AnimatedCardStack(cards: List<CardData>) {
                             verticalDragOffset,
                             horizontalDragOffset,
                             onFanStateChange = { newFanState -> isRotated = newFanState },
-                            onCardsReorder = { orderedCards = reorderCards(orderedCards) }
+                            onCardsReorder = {
+                                animationState =
+                                    CardSwapAnimationState(isAnimating = true, animationStep = 1)
+                            }
                         )
                         verticalDragOffset = 0f
                         horizontalDragOffset = 0f
@@ -70,12 +73,15 @@ fun AnimatedCardStack(cards: List<CardData>) {
         orderedCards.forEachIndexed { i, cardData ->
             key(cardData.imageResId) {
                 val targetRotation = calculateCardRotation(i, cardCount, isRotated)
+                val isBottomCard = i == 0
 
                 AnimatedCard(
                     cardIndex = i,
                     targetRotation = targetRotation,
-                    cardData = cardData
-                    // TODO: [Задание 5] Здесь добавьте параметры анимации карты
+                    cardData = cardData,
+                    isAnimating = if (isBottomCard) animationState.isAnimating else false,
+                    animationStep = if (isBottomCard) animationState.animationStep else 0,
+                    onAnimationStepComplete = { animationState = CardSwapAnimationState() }
                 )
             }
         }
