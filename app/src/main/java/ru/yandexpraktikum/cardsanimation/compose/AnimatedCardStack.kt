@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import ru.yandexpraktikum.cardsanimation.model.CardData
+import ru.yandexpraktikum.cardsanimation.ui.CardSwapAnimationState
 import kotlin.math.abs
 
 /**
@@ -38,32 +39,29 @@ fun calculateCardRotation(
 fun AnimatedCardStack(cards: List<CardData>) {
     var orderedCards by remember(cards) { mutableStateOf(cards) }
     val cardCount = cards.size
-    val offsetThreshold = 75f
     var isRotated by remember { mutableStateOf(false) }
     var verticalDragOffset by remember { mutableFloatStateOf(0f) }
     var horizontalDragOffset by remember { mutableFloatStateOf(0f) }
+    var animationState by remember { mutableStateOf(CardSwapAnimationState()) }
 
     Box(
         modifier = Modifier
             .pointerInput(Unit) {
                 detectDragGestures(
-                    onDragStart = {
-                        verticalDragOffset = 0f
-                        horizontalDragOffset = 0f
-                    },
                     onDrag = { _, dragAmount ->
                         verticalDragOffset += dragAmount.y
                         horizontalDragOffset += dragAmount.x
                     },
                     onDragEnd = {
-                        if (abs(verticalDragOffset) > abs(horizontalDragOffset)) {
-                            if (verticalDragOffset < -offsetThreshold) isRotated = true
-                            if (verticalDragOffset > offsetThreshold) isRotated = false
-                        } else {
-                            if (abs(horizontalDragOffset) > offsetThreshold) {
-                                orderedCards = reorderCards(orderedCards)
-                            }
-                        }
+                        handleDragEnd(
+                            animationState,
+                            verticalDragOffset,
+                            horizontalDragOffset,
+                            onFanStateChange = { newFanState -> isRotated = newFanState },
+                            onCardsReorder = { orderedCards = reorderCards(orderedCards) }
+                        )
+                        verticalDragOffset = 0f
+                        horizontalDragOffset = 0f
                     }
                 )
             },
@@ -81,6 +79,24 @@ fun AnimatedCardStack(cards: List<CardData>) {
                 )
             }
         }
+    }
+}
+
+fun handleDragEnd(
+    animationState: CardSwapAnimationState,
+    verticalDragOffset: Float,
+    horizontalDragOffset: Float,
+    onFanStateChange: (Boolean) -> Unit,
+    onCardsReorder: () -> Unit
+) {
+    if (animationState.isAnimating) return
+
+    val offsetThreshold = 75f
+    if (abs(verticalDragOffset) > abs(horizontalDragOffset)) {
+        if (verticalDragOffset < -offsetThreshold) onFanStateChange(true)
+        if (verticalDragOffset > offsetThreshold) onFanStateChange(false)
+    } else {
+        if (abs(horizontalDragOffset) > offsetThreshold) onCardsReorder()
     }
 }
 

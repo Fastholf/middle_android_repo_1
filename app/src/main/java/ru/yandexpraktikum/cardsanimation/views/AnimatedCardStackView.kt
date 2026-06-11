@@ -7,6 +7,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.widget.FrameLayout
 import ru.yandexpraktikum.cardsanimation.model.CardData
+import ru.yandexpraktikum.cardsanimation.ui.CardSwapAnimationState
 import kotlin.math.abs
 
 class AnimatedCardStackView @JvmOverloads constructor(
@@ -22,6 +23,7 @@ class AnimatedCardStackView @JvmOverloads constructor(
     private var verticalDragOffset = 0f
     private var horizontalDragOffset = 0f
     private var flingDetected = false
+    private var animationState = CardSwapAnimationState()
 
     init {
         @SuppressLint("ClickableViewAccessibility")
@@ -162,10 +164,16 @@ class AnimatedCardStackView @JvmOverloads constructor(
     }
 
     private fun startCardSwapAnimation(bottomCard: AnimatedCardView) {
+        if (animationState.isAnimating) return
+
+        animationState = CardSwapAnimationState(true, 1)
+
         // TODO: [Задание 5] Добавьте анимацию перетасовки карт
         // На данном этапе просто быстро двигаем нижнюю карту наверх
         cardDataList = reorderCards(cardDataList)
         setupCards()
+
+        animationState = CardSwapAnimationState()
     }
 
     // Простая функция перестановки карт
