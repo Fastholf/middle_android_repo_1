@@ -20,6 +20,7 @@ class AnimatedCardStackView @JvmOverloads constructor(
     private var isRotated = false
     private val offsetThreshold = 75f
     private var verticalDragOffset = 0f
+    private var horizontalDragOffset = 0f
     private var flingDetected = false
 
     init {
@@ -27,9 +28,18 @@ class AnimatedCardStackView @JvmOverloads constructor(
         setOnTouchListener { _, event ->
             var handled = gestureDetector.onTouchEvent(event)
             if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
-                if (!flingDetected && abs(verticalDragOffset) > offsetThreshold) {
-                    toggleStack(open = verticalDragOffset > 0)
-                    handled = true
+                if (!flingDetected) {
+                    if (abs(verticalDragOffset) > abs(horizontalDragOffset)) {
+                        if (abs(verticalDragOffset) > offsetThreshold) {
+                            toggleStack(open = verticalDragOffset > 0)
+                            handled = true
+                        }
+                    } else {
+                        if (abs(horizontalDragOffset) > offsetThreshold) {
+                            startCardSwapAnimation(cards.last())
+                            handled = true
+                        }
+                    }
                 }
             }
             handled
@@ -61,7 +71,7 @@ class AnimatedCardStackView @JvmOverloads constructor(
         removeAllViews()
     }
 
-    private fun updateCardPositions() {
+    private fun updateCardPositions(animated: Boolean = false) {
         val cardCount = cards.size
 
         cards.forEachIndexed { index, cardView ->
@@ -92,7 +102,11 @@ class AnimatedCardStackView @JvmOverloads constructor(
             cardView.pivotX = cardWidth / 2f
             cardView.pivotY = cardHeight
 
-            cardView.animateToRotation(targetRotation)
+            if (animated) {
+                cardView.animateToRotation(targetRotation)
+            } else {
+                cardView.rotation = targetRotation
+            }
         }
     }
 
@@ -108,6 +122,7 @@ class AnimatedCardStackView @JvmOverloads constructor(
         object : GestureDetector.SimpleOnGestureListener() {
             override fun onDown(e: MotionEvent): Boolean {
                 verticalDragOffset = 0f
+                horizontalDragOffset = 0f
                 flingDetected = false
                 return true
             }
@@ -119,6 +134,7 @@ class AnimatedCardStackView @JvmOverloads constructor(
                 distanceY: Float
             ): Boolean {
                 verticalDragOffset += distanceY
+                horizontalDragOffset += distanceX
                 return true
             }
 
@@ -132,16 +148,17 @@ class AnimatedCardStackView @JvmOverloads constructor(
                 val isVertical = abs(velocityY) > abs(velocityX)
                 if (isVertical) {
                     toggleStack(open = velocityY < 0)
-                    return true
+                } else {
+                    startCardSwapAnimation(cards.last())
                 }
-                return super.onFling(e1, e2, velocityX, velocityY)
+                return true
             }
         }
     )
 
     private fun toggleStack(open: Boolean) {
         isRotated = open
-        updateCardPositions()
+        updateCardPositions(animated = true)
     }
 
     private fun startCardSwapAnimation(bottomCard: AnimatedCardView) {
@@ -155,6 +172,4 @@ class AnimatedCardStackView @JvmOverloads constructor(
     fun reorderCards(cards: List<CardData>): List<CardData> {
         return cards.drop(1) + cards.first()
     }
-
-    // TODO: [Задание 4] Добавьте обработку горизонтальных свайпов (влево/вправо)
 }

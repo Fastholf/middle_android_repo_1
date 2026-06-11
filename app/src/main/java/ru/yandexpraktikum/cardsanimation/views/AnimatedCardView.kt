@@ -29,11 +29,16 @@ class AnimatedCardView @JvmOverloads constructor(
         pivotY = height.toFloat()
     }
 
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super.onSizeChanged(w, h, oldw, oldh)
-        pivotX = w / 2f
-        pivotY = h.toFloat()
-    }
+    // Ушаков Алексей: При выполнении Задания 4 пришлось закомментить этот код. По крайней мере на
+    // моём девайсе карты разъезжались в разные стороны при вызове метода startCardSwapAnimation().
+    // Я бы на самом деле убрал pivot из AnimatedCardStackView и оставил здесь. Но тогда надо будет
+    // ещё в AnimatedCardStackView поправить добавление вью в контейнер - сейчас там не указываются
+    // явно LayoutParams и видимо FrameLayout AnimatedCardView раздувается до размера контейнера.
+//    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+//        super.onSizeChanged(w, h, oldw, oldh)
+//        pivotX = w / 2f
+//        pivotY = h.toFloat()
+//    }
 
     fun setCardData(cardData: CardData) {
         cardImageView.setImageResource(cardData.imageResId)

@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import ru.yandexpraktikum.cardsanimation.model.CardData
+import kotlin.math.abs
 
 /**
  * Метод для вычисления поворота карты в конкретной позиции
@@ -35,26 +36,40 @@ fun calculateCardRotation(
 
 @Composable
 fun AnimatedCardStack(cards: List<CardData>) {
+    var orderedCards by remember(cards) { mutableStateOf(cards) }
     val cardCount = cards.size
     val offsetThreshold = 75f
     var isRotated by remember { mutableStateOf(false) }
     var verticalDragOffset by remember { mutableFloatStateOf(0f) }
+    var horizontalDragOffset by remember { mutableFloatStateOf(0f) }
 
     Box(
         modifier = Modifier
             .pointerInput(Unit) {
                 detectDragGestures(
-                    onDragStart = { verticalDragOffset = 0f },
-                    onDrag = { _, dragAmount -> verticalDragOffset += dragAmount.y },
+                    onDragStart = {
+                        verticalDragOffset = 0f
+                        horizontalDragOffset = 0f
+                    },
+                    onDrag = { _, dragAmount ->
+                        verticalDragOffset += dragAmount.y
+                        horizontalDragOffset += dragAmount.x
+                    },
                     onDragEnd = {
-                        if (verticalDragOffset < -offsetThreshold) isRotated = true
-                        if (verticalDragOffset > offsetThreshold) isRotated = false
+                        if (abs(verticalDragOffset) > abs(horizontalDragOffset)) {
+                            if (verticalDragOffset < -offsetThreshold) isRotated = true
+                            if (verticalDragOffset > offsetThreshold) isRotated = false
+                        } else {
+                            if (abs(horizontalDragOffset) > offsetThreshold) {
+                                orderedCards = reorderCards(orderedCards)
+                            }
+                        }
                     }
                 )
             },
         contentAlignment = Alignment.Center
     ) {
-        cards.forEachIndexed { i, cardData ->
+        orderedCards.forEachIndexed { i, cardData ->
             key(cardData.imageResId) {
                 val targetRotation = calculateCardRotation(i, cardCount, isRotated)
 
