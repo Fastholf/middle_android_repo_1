@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import ru.yandexpraktikum.cardsanimation.R
 import ru.yandexpraktikum.cardsanimation.model.CardData
 import kotlin.math.cos
@@ -46,26 +47,36 @@ fun AnimatedCard(
             y = moveDistance * sin(rotationRad).toFloat()
         )
     } else {
-        Offset.Zero
+        Offset(x = 0f, y = 0f)
     }
     val animatedTranslation by animateOffsetAsState(
         targetValue = targetTranslation,
         animationSpec = tween(durationMillis = 300),
         finishedListener = {
-            if (isAnimating && animationStep == 1) onAnimationStepComplete?.invoke(1)
+            if (isAnimating) {
+                when (animationStep) {
+                    1 -> onAnimationStepComplete?.invoke(1)
+                    2 -> onAnimationStepComplete?.invoke(2)
+                }
+            }
         },
         label = "cardTranslation"
     )
 
+    var cardModifier = Modifier
+        .size(width = 100.dp, height = 160.dp)
+        .graphicsLayer {
+            rotationZ = animatedRotation
+            transformOrigin = TransformOrigin(0.5f, 1.0f)
+            translationX = if (isAnimating) animatedTranslation.x else 0f
+            translationY = if (isAnimating) animatedTranslation.y else 0f
+        }
+
+    val shouldBringToFront = isAnimating && animationStep >= 2
+    if (shouldBringToFront) cardModifier = cardModifier.zIndex(1000f)
+
     Card(
-        modifier = Modifier
-            .size(width = 100.dp, height = 160.dp)
-            .graphicsLayer {
-                rotationZ = animatedRotation
-                transformOrigin = TransformOrigin(0.5f, 1.0f)
-                translationX = if (isAnimating) animatedTranslation.x else 0f
-                translationY = if (isAnimating) animatedTranslation.y else 0f
-            },
+        modifier = cardModifier,
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(
             defaultElevation = (4 + cardIndex).dp

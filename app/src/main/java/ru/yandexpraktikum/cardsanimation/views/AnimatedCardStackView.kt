@@ -169,8 +169,18 @@ class AnimatedCardStackView @JvmOverloads constructor(
         animationState = CardSwapAnimationState(true, 1)
 
         bottomCard.moveCardRight {
-            animationState = CardSwapAnimationState()
+            animationState = CardSwapAnimationState(true, 2)
+            bringCardToFront(bottomCard)
+            bottomCard.moveCardToTop {
+                animationState = CardSwapAnimationState()
+            }
         }
+    }
+
+    private fun bringCardToFront(card: AnimatedCardView) {
+        card.bringToFront()
+        val maxElevation = (4 + cards.size + 20).toFloat() * resources.displayMetrics.density
+        card.cardView.cardElevation = maxElevation
     }
 
     // Простая функция перестановки карт

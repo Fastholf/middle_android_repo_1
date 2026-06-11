@@ -81,7 +81,13 @@ fun AnimatedCardStack(cards: List<CardData>) {
                     cardData = cardData,
                     isAnimating = if (isBottomCard) animationState.isAnimating else false,
                     animationStep = if (isBottomCard) animationState.animationStep else 0,
-                    onAnimationStepComplete = { animationState = CardSwapAnimationState() }
+                    onAnimationStepComplete = { completedStep ->
+                        animationState = when (completedStep) {
+                            1 -> CardSwapAnimationState(isAnimating = true, animationStep = 2)
+                            2 -> CardSwapAnimationState()
+                            else -> CardSwapAnimationState()
+                        }
+                    }
                 )
             }
         }
