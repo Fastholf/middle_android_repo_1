@@ -39,7 +39,7 @@ class AnimatedCardStackView @JvmOverloads constructor(
                         }
                     } else {
                         if (abs(horizontalDragOffset) > offsetThreshold) {
-                            startCardSwapAnimation(cards.last())
+                            startCardSwapAnimation(cards.first())
                             handled = true
                         }
                     }
