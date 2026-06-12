@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -22,8 +21,8 @@ import kotlin.math.abs
 fun AnimatedCardStack(cards: List<CardData>) {
     var orderedCards by remember(cards) { mutableStateOf(cards) }
     var isRotated by remember { mutableStateOf(false) }
-    var verticalDragOffset by remember { mutableFloatStateOf(0f) }
-    var horizontalDragOffset by remember { mutableFloatStateOf(0f) }
+    var verticalDragOffset = 0f
+    var horizontalDragOffset = 0f
     var animationState by remember { mutableStateOf(CardSwapAnimationState()) }
 
     Box(
