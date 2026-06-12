@@ -35,7 +35,14 @@ fun AnimatedCard(
     animationStep: Int,
     onAnimationStepComplete: ((Int) -> Unit)?
 ) {
-    val animatedRotation by animateFloatAsState(targetRotation)
+    val animatedRotation by animateFloatAsState(
+        targetValue = targetRotation,
+        animationSpec = tween(durationMillis = if (animationStep == 3) 300 else 800),
+        finishedListener = {
+            if (isAnimating && animationStep == 3) onAnimationStepComplete?.invoke(3)
+        },
+        label = "rotation"
+    )
 
     val targetTranslation = if (isAnimating && animationStep == 1) {
         val moveDistance = with(LocalDensity.current) {
@@ -68,11 +75,11 @@ fun AnimatedCard(
         .graphicsLayer {
             rotationZ = animatedRotation
             transformOrigin = TransformOrigin(0.5f, 1.0f)
-            translationX = if (isAnimating) animatedTranslation.x else 0f
-            translationY = if (isAnimating) animatedTranslation.y else 0f
+            translationX = if (isAnimating && animationStep != 3) animatedTranslation.x else 0f
+            translationY = if (isAnimating && animationStep != 3) animatedTranslation.y else 0f
         }
 
-    val shouldBringToFront = isAnimating && animationStep >= 2
+    val shouldBringToFront = isAnimating && animationStep == 2
     if (shouldBringToFront) cardModifier = cardModifier.zIndex(1000f)
 
     Card(

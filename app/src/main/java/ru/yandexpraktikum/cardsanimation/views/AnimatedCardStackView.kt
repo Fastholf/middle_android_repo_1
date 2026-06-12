@@ -7,6 +7,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.widget.FrameLayout
 import ru.yandexpraktikum.cardsanimation.model.CardData
+import ru.yandexpraktikum.cardsanimation.ui.AppMath
 import ru.yandexpraktikum.cardsanimation.ui.CardSwapAnimationState
 import kotlin.math.abs
 
@@ -74,24 +75,8 @@ class AnimatedCardStackView @JvmOverloads constructor(
     }
 
     private fun updateCardPositions(animated: Boolean = false) {
-        val cardCount = cards.size
-
         cards.forEachIndexed { index, cardView ->
-            // Расчёт расположения карт в исходной позиции
-            val baseRotation = if (cardCount > 1) {
-                val angleStep = 45f / (cardCount - 1)
-                22.5f - (index * angleStep)
-            } else {
-                0f
-            }
-
-            // Расчёт финальной позиции (для эффекта раскрытой колоды карт)
-            val targetRotation = if (isRotated) {
-                val angleStep = if (cardCount > 1) 180f / (cardCount - 1) else 0f
-                90f - (index * angleStep)
-            } else {
-                baseRotation
-            }
+            val targetRotation = AppMath.cardRotation(isRotated, index)
 
             val cardWidth = 100f * resources.displayMetrics.density
             val cardHeight = 160f * resources.displayMetrics.density
@@ -172,7 +157,9 @@ class AnimatedCardStackView @JvmOverloads constructor(
             animationState = CardSwapAnimationState(true, 2)
             bringCardToFront(bottomCard)
             bottomCard.moveCardToTop {
-                animationState = CardSwapAnimationState()
+                animationState = CardSwapAnimationState(true, 3)
+                reorderCardsData()
+                animateAllCardsToFinalPositions()
             }
         }
     }
@@ -183,8 +170,41 @@ class AnimatedCardStackView @JvmOverloads constructor(
         card.cardView.cardElevation = maxElevation
     }
 
-    // Простая функция перестановки карт
-    fun reorderCards(cards: List<CardData>): List<CardData> {
-        return cards.drop(1) + cards.first()
+    private fun reorderCardsData() {
+        val reorderedCards = cardDataList.drop(1) + cardDataList.first()
+        cardDataList = reorderedCards
+
+        val bottomCardView = cards.removeAt(0)
+        cards.add(bottomCardView)
+
+        cards.forEachIndexed { index, cardView ->
+            cardView.setCardData(cardDataList[index])
+        }
+    }
+
+    private fun animateAllCardsToFinalPositions() {
+        var completedAnimations = 0
+        val totalAnimations = cards.size
+
+        cards.forEachIndexed { index, cardView ->
+            val finalRotation = AppMath.cardRotation(isRotated, index)
+
+            cardView.adjustToFinalPosition(finalRotation, index) {
+                completedAnimations++
+                if (completedAnimations == totalAnimations) {
+                    finalizeCardPositions()
+                }
+            }
+        }
+    }
+
+    private fun finalizeCardPositions() {
+        cards.forEachIndexed { index, card ->
+            card.setStackPosition(index)
+            val correctRotation = AppMath.cardRotation(isRotated, index)
+            card.rotation = correctRotation
+        }
+
+        animationState = CardSwapAnimationState()
     }
 }

@@ -13,32 +13,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import ru.yandexpraktikum.cardsanimation.model.CardData
+import ru.yandexpraktikum.cardsanimation.ui.AppMath
 import ru.yandexpraktikum.cardsanimation.ui.CardSwapAnimationState
 import kotlin.math.abs
 
-/**
- * Метод для вычисления поворота карты в конкретной позиции
- */
-fun calculateCardRotation(
-    cardIndex: Int,
-    cardCount: Int,
-    isRotated: Boolean
-): Float {
-    if (cardCount <= 1) return 0f
-
-    return if (isRotated) {
-        val angleStep = 180f / (cardCount - 1)
-        90f - (cardIndex * angleStep)
-    } else {
-        val angleStep = 45f / (cardCount - 1)
-        22.5f - (cardIndex * angleStep)
-    }
-}
 
 @Composable
 fun AnimatedCardStack(cards: List<CardData>) {
     var orderedCards by remember(cards) { mutableStateOf(cards) }
-    val cardCount = cards.size
     var isRotated by remember { mutableStateOf(false) }
     var verticalDragOffset by remember { mutableFloatStateOf(0f) }
     var horizontalDragOffset by remember { mutableFloatStateOf(0f) }
@@ -72,19 +54,25 @@ fun AnimatedCardStack(cards: List<CardData>) {
     ) {
         orderedCards.forEachIndexed { i, cardData ->
             key(cardData.imageResId) {
-                val targetRotation = calculateCardRotation(i, cardCount, isRotated)
-                val isBottomCard = i == 0
+                val targetRotation = AppMath.cardRotation(isRotated, i)
+
+                // Перед началом 3 этапа мы поместили нижнюю карту наверх
+                val isMovingCard = i == (if (animationState.animationStep == 3) 3 else 0)
 
                 AnimatedCard(
                     cardIndex = i,
                     targetRotation = targetRotation,
                     cardData = cardData,
-                    isAnimating = if (isBottomCard) animationState.isAnimating else false,
-                    animationStep = if (isBottomCard) animationState.animationStep else 0,
+                    isAnimating = if (isMovingCard) animationState.isAnimating else false,
+                    animationStep = animationState.animationStep,
                     onAnimationStepComplete = { completedStep ->
                         animationState = when (completedStep) {
                             1 -> CardSwapAnimationState(isAnimating = true, animationStep = 2)
-                            2 -> CardSwapAnimationState()
+                            2 -> {
+                                orderedCards = reorderCards(orderedCards)
+                                CardSwapAnimationState(isAnimating = true, animationStep = 3)
+                            }
+
                             else -> CardSwapAnimationState()
                         }
                     }
