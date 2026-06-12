@@ -75,8 +75,9 @@ class AnimatedCardStackView @JvmOverloads constructor(
     }
 
     private fun updateCardPositions(animated: Boolean = false) {
+        val cardCount = cards.size
         cards.forEachIndexed { index, cardView ->
-            val targetRotation = AppMath.cardRotation(isRotated, index)
+            val targetRotation = AppMath.cardRotation(isRotated, index, cardCount)
 
             val cardWidth = 100f * resources.displayMetrics.density
             val cardHeight = 160f * resources.displayMetrics.density
@@ -186,9 +187,10 @@ class AnimatedCardStackView @JvmOverloads constructor(
     private fun animateAllCardsToFinalPositions() {
         var completedAnimations = 0
         val totalAnimations = cards.size
+        val cardCount = cards.size
 
         cards.forEachIndexed { index, cardView ->
-            val finalRotation = AppMath.cardRotation(isRotated, index)
+            val finalRotation = AppMath.cardRotation(isRotated, index, cardCount)
 
             cardView.adjustToFinalPosition(finalRotation, index) {
                 completedAnimations++
@@ -200,9 +202,10 @@ class AnimatedCardStackView @JvmOverloads constructor(
     }
 
     private fun finalizeCardPositions() {
+        val cardCount = cards.size
         cards.forEachIndexed { index, card ->
             card.setStackPosition(index)
-            val correctRotation = AppMath.cardRotation(isRotated, index)
+            val correctRotation = AppMath.cardRotation(isRotated, index, cardCount)
             card.rotation = correctRotation
         }
 

@@ -4,7 +4,7 @@ object AppMath {
     /**
      * Метод для вычисления поворота карты в конкретной позиции
      */
-    fun cardRotation(isRotated: Boolean, cardIndex: Int, cardCount: Int = 4): Float {
+    fun cardRotation(isRotated: Boolean, cardIndex: Int, cardCount: Int): Float {
         if (cardCount <= 1) return 0f
 
         return if (isRotated) {

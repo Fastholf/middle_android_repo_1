@@ -59,7 +59,7 @@ fun AnimatedCardStack(cards: List<CardData>) {
     ) {
         orderedCards.forEachIndexed { i, cardData ->
             key(cardData.imageResId) {
-                val targetRotation = AppMath.cardRotation(isRotated, i)
+                val targetRotation = AppMath.cardRotation(isRotated, i, orderedCards.size)
 
                 // Перед началом 3 этапа мы поместили нижнюю карту наверх
                 val isMovingCard = i == (if (animationState.animationStep == 3) 3 else 0)
