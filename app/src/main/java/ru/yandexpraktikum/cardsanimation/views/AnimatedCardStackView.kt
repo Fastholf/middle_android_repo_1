@@ -144,12 +144,13 @@ class AnimatedCardStackView @JvmOverloads constructor(
     )
 
     private fun toggleStack(open: Boolean) {
+        if (animationState.isAnimating) return
         isRotated = open
         updateCardPositions(animated = true)
     }
 
     private fun startCardSwapAnimation(bottomCard: AnimatedCardView) {
-        if (animationState.isAnimating) return
+        if (animationState.isAnimating || isRotated) return
 
         animationState = CardSwapAnimationState(true, 1)
 

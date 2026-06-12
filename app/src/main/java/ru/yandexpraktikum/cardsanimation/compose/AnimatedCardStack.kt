@@ -41,8 +41,13 @@ fun AnimatedCardStack(cards: List<CardData>) {
                             horizontalDragOffset,
                             onFanStateChange = { newFanState -> isRotated = newFanState },
                             onCardsReorder = {
-                                animationState =
-                                    CardSwapAnimationState(isAnimating = true, animationStep = 1)
+                                if (!isRotated) {
+                                    animationState =
+                                        CardSwapAnimationState(
+                                            isAnimating = true,
+                                            animationStep = 1
+                                        )
+                                }
                             }
                         )
                         verticalDragOffset = 0f
