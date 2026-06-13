@@ -9,6 +9,8 @@ import android.widget.ImageView
 import androidx.cardview.widget.CardView
 import ru.yandexpraktikum.cardsanimation.R
 import ru.yandexpraktikum.cardsanimation.model.CardData
+import ru.yandexpraktikum.cardsanimation.ui.AnimParams.FAN_DURATION_MS
+import ru.yandexpraktikum.cardsanimation.ui.AnimParams.REORDER_STEP_DURATION_MS
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -50,10 +52,10 @@ class AnimatedCardView @JvmOverloads constructor(
         cardView.cardElevation = (4 + index * 1).toFloat() * resources.displayMetrics.density
     }
 
-    fun animateToRotation(targetRotation: Float, duration: Long = 300) {
+    fun animateToRotation(targetRotation: Float) {
         ObjectAnimator
             .ofFloat(this, "rotation", targetRotation)
-            .apply { this.duration = duration }
+            .apply { this.duration = FAN_DURATION_MS.toLong() }
             .start()
     }
 
@@ -72,7 +74,7 @@ class AnimatedCardView @JvmOverloads constructor(
 
         val animatorSet = android.animation.AnimatorSet().apply {
             playTogether(animatorX, animatorY)
-            duration = 300
+            duration = REORDER_STEP_DURATION_MS.toLong()
             addListener(object : android.animation.AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: android.animation.Animator) {
                     onComplete?.invoke()
@@ -85,8 +87,8 @@ class AnimatedCardView @JvmOverloads constructor(
 
     fun moveCardToTop(onComplete: (() -> Unit)? = null) {
         val parent = parent as? FrameLayout ?: return
-        val cardWidth = 100f * resources.displayMetrics.density
-        val cardHeight = 160f * resources.displayMetrics.density
+        val cardWidth = resources.getDimension(R.dimen.card_width)
+        val cardHeight = resources.getDimension(R.dimen.card_height)
         val centerX = parent.width / 2f - cardWidth / 2f
         val centerY = parent.height / 2f - cardHeight / 2f
 
@@ -95,7 +97,7 @@ class AnimatedCardView @JvmOverloads constructor(
 
         val animatorSet = android.animation.AnimatorSet().apply {
             playTogether(animatorX, animatorY)
-            duration = 300
+            duration = REORDER_STEP_DURATION_MS.toLong()
             addListener(object : android.animation.AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: android.animation.Animator) {
                     onComplete?.invoke()
@@ -106,9 +108,13 @@ class AnimatedCardView @JvmOverloads constructor(
         animatorSet.start()
     }
 
-    fun adjustToFinalPosition(finalRotation: Float, finalZOrder: Int, onComplete: (() -> Unit)? = null) {
+    fun adjustToFinalPosition(
+        finalRotation: Float,
+        finalZOrder: Int,
+        onComplete: (() -> Unit)? = null
+    ) {
         ObjectAnimator.ofFloat(this, "rotation", rotation, finalRotation).apply {
-            duration = 300
+            duration = REORDER_STEP_DURATION_MS.toLong()
             addListener(object : android.animation.AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: android.animation.Animator) {
                     setStackPosition(finalZOrder)

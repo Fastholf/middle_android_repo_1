@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import ru.yandexpraktikum.cardsanimation.R
 import ru.yandexpraktikum.cardsanimation.model.CardData
+import ru.yandexpraktikum.cardsanimation.ui.AnimParams.FAN_DURATION_MS
+import ru.yandexpraktikum.cardsanimation.ui.AnimParams.REORDER_STEP_DURATION_MS
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -35,9 +37,10 @@ fun AnimatedCard(
     animationStep: Int,
     onAnimationStepComplete: ((Int) -> Unit)?
 ) {
+    val rotateDuration = if (animationStep == 3) REORDER_STEP_DURATION_MS else FAN_DURATION_MS
     val animatedRotation by animateFloatAsState(
         targetValue = targetRotation,
-        animationSpec = tween(durationMillis = if (animationStep == 3) 300 else 800),
+        animationSpec = tween(durationMillis = rotateDuration),
         finishedListener = {
             if (isAnimating && animationStep == 3) onAnimationStepComplete?.invoke(3)
         },
@@ -58,7 +61,7 @@ fun AnimatedCard(
     }
     val animatedTranslation by animateOffsetAsState(
         targetValue = targetTranslation,
-        animationSpec = tween(durationMillis = 300),
+        animationSpec = tween(durationMillis = REORDER_STEP_DURATION_MS),
         finishedListener = {
             if (isAnimating) {
                 when (animationStep) {
@@ -71,7 +74,10 @@ fun AnimatedCard(
     )
 
     var cardModifier = Modifier
-        .size(width = 100.dp, height = 160.dp)
+        .size(
+            width = dimensionResource(R.dimen.card_width),
+            height = dimensionResource(R.dimen.card_height)
+        )
         .graphicsLayer {
             rotationZ = animatedRotation
             transformOrigin = TransformOrigin(0.5f, 1.0f)

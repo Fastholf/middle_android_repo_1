@@ -6,7 +6,9 @@ import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.widget.FrameLayout
+import ru.yandexpraktikum.cardsanimation.R
 import ru.yandexpraktikum.cardsanimation.model.CardData
+import ru.yandexpraktikum.cardsanimation.ui.AnimParams.OFFSET_THRESHOLD_PX
 import ru.yandexpraktikum.cardsanimation.ui.AppMath
 import ru.yandexpraktikum.cardsanimation.ui.CardSwapAnimationState
 import kotlin.math.abs
@@ -20,7 +22,6 @@ class AnimatedCardStackView @JvmOverloads constructor(
     private var cardDataList: List<CardData> = emptyList()
     private val cards = mutableListOf<AnimatedCardView>()
     private var isRotated = false
-    private val offsetThreshold = 75f
     private var verticalDragOffset = 0f
     private var horizontalDragOffset = 0f
     private var flingDetected = false
@@ -33,12 +34,12 @@ class AnimatedCardStackView @JvmOverloads constructor(
             if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
                 if (!flingDetected) {
                     if (abs(verticalDragOffset) > abs(horizontalDragOffset)) {
-                        if (abs(verticalDragOffset) > offsetThreshold) {
+                        if (abs(verticalDragOffset) > OFFSET_THRESHOLD_PX) {
                             toggleStack(open = verticalDragOffset > 0)
                             handled = true
                         }
                     } else {
-                        if (abs(horizontalDragOffset) > offsetThreshold) {
+                        if (abs(horizontalDragOffset) > OFFSET_THRESHOLD_PX) {
                             startCardSwapAnimation(cards.first())
                             handled = true
                         }
@@ -76,11 +77,12 @@ class AnimatedCardStackView @JvmOverloads constructor(
 
     private fun updateCardPositions(animated: Boolean = false) {
         val cardCount = cards.size
+        val cardWidth = resources.getDimension(R.dimen.card_width)
+        val cardHeight = resources.getDimension(R.dimen.card_height)
+
         cards.forEachIndexed { index, cardView ->
             val targetRotation = AppMath.cardRotation(isRotated, index, cardCount)
 
-            val cardWidth = 100f * resources.displayMetrics.density
-            val cardHeight = 160f * resources.displayMetrics.density
             val sharedX = width / 2f - cardWidth / 2f
             val sharedY = height / 2f - cardHeight / 2f
 

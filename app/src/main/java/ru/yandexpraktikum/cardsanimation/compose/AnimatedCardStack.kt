@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import ru.yandexpraktikum.cardsanimation.model.CardData
+import ru.yandexpraktikum.cardsanimation.ui.AnimParams.OFFSET_THRESHOLD_PX
 import ru.yandexpraktikum.cardsanimation.ui.AppMath
 import ru.yandexpraktikum.cardsanimation.ui.CardSwapAnimationState
 import kotlin.math.abs
@@ -96,12 +97,11 @@ fun handleDragEnd(
 ) {
     if (animationState.isAnimating) return
 
-    val offsetThreshold = 75f
     if (abs(verticalDragOffset) > abs(horizontalDragOffset)) {
-        if (verticalDragOffset < -offsetThreshold) onFanStateChange(true)
-        if (verticalDragOffset > offsetThreshold) onFanStateChange(false)
+        if (verticalDragOffset < -OFFSET_THRESHOLD_PX) onFanStateChange(true)
+        if (verticalDragOffset > OFFSET_THRESHOLD_PX) onFanStateChange(false)
     } else {
-        if (abs(horizontalDragOffset) > offsetThreshold) onCardsReorder()
+        if (abs(horizontalDragOffset) > OFFSET_THRESHOLD_PX) onCardsReorder()
     }
 }
 
