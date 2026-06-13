@@ -25,6 +25,8 @@ import ru.yandexpraktikum.cardsanimation.R
 import ru.yandexpraktikum.cardsanimation.model.CardData
 import ru.yandexpraktikum.cardsanimation.ui.AnimParams.FAN_DURATION_MS
 import ru.yandexpraktikum.cardsanimation.ui.AnimParams.REORDER_STEP_DURATION_MS
+import ru.yandexpraktikum.cardsanimation.ui.CardSwapAnimationStep
+import ru.yandexpraktikum.cardsanimation.ui.CardSwapAnimationStep.FINAL_ROTATION
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -34,20 +36,26 @@ fun AnimatedCard(
     cardData: CardData,
     targetRotation: Float,
     isAnimating: Boolean,
-    animationStep: Int,
-    onAnimationStepComplete: ((Int) -> Unit)?
+    animationStep: CardSwapAnimationStep,
+    onAnimationStepComplete: ((CardSwapAnimationStep) -> Unit)?
 ) {
-    val rotateDuration = if (animationStep == 3) REORDER_STEP_DURATION_MS else FAN_DURATION_MS
+    val rotateDuration = if (animationStep.isFinalRotation) {
+        REORDER_STEP_DURATION_MS
+    } else {
+        FAN_DURATION_MS
+    }
     val animatedRotation by animateFloatAsState(
         targetValue = targetRotation,
         animationSpec = tween(durationMillis = rotateDuration),
         finishedListener = {
-            if (isAnimating && animationStep == 3) onAnimationStepComplete?.invoke(3)
+            if (isAnimating && animationStep.isFinalRotation) {
+                onAnimationStepComplete?.invoke(FINAL_ROTATION)
+            }
         },
         label = "rotation"
     )
 
-    val targetTranslation = if (isAnimating && animationStep == 1) {
+    val targetTranslation = if (isAnimating && animationStep.isMoveRight) {
         val moveDistance = with(LocalDensity.current) {
             dimensionResource(R.dimen.reorder_first_translation).toPx()
         }
@@ -63,11 +71,8 @@ fun AnimatedCard(
         targetValue = targetTranslation,
         animationSpec = tween(durationMillis = REORDER_STEP_DURATION_MS),
         finishedListener = {
-            if (isAnimating) {
-                when (animationStep) {
-                    1 -> onAnimationStepComplete?.invoke(1)
-                    2 -> onAnimationStepComplete?.invoke(2)
-                }
+            if (isAnimating && animationStep.movesCard) {
+                onAnimationStepComplete?.invoke(animationStep)
             }
         },
         label = "cardTranslation"
@@ -81,11 +86,11 @@ fun AnimatedCard(
         .graphicsLayer {
             rotationZ = animatedRotation
             transformOrigin = TransformOrigin(0.5f, 1.0f)
-            translationX = if (isAnimating && animationStep != 3) animatedTranslation.x else 0f
-            translationY = if (isAnimating && animationStep != 3) animatedTranslation.y else 0f
+            translationX = if (isAnimating && animationStep.movesCard) animatedTranslation.x else 0f
+            translationY = if (isAnimating && animationStep.movesCard) animatedTranslation.y else 0f
         }
 
-    val shouldBringToFront = isAnimating && animationStep == 2
+    val shouldBringToFront = isAnimating && animationStep.isMoveToTop
     if (shouldBringToFront) cardModifier = cardModifier.zIndex(1000f)
 
     Card(

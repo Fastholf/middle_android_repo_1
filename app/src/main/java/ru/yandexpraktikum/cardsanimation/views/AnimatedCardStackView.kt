@@ -11,6 +11,9 @@ import ru.yandexpraktikum.cardsanimation.model.CardData
 import ru.yandexpraktikum.cardsanimation.ui.AnimParams.OFFSET_THRESHOLD_PX
 import ru.yandexpraktikum.cardsanimation.ui.AppMath
 import ru.yandexpraktikum.cardsanimation.ui.CardSwapAnimationState
+import ru.yandexpraktikum.cardsanimation.ui.CardSwapAnimationStep.FINAL_ROTATION
+import ru.yandexpraktikum.cardsanimation.ui.CardSwapAnimationStep.MOVE_RIGHT
+import ru.yandexpraktikum.cardsanimation.ui.CardSwapAnimationStep.MOVE_TO_TOP
 import kotlin.math.abs
 
 class AnimatedCardStackView @JvmOverloads constructor(
@@ -155,13 +158,13 @@ class AnimatedCardStackView @JvmOverloads constructor(
     private fun startCardSwapAnimation(bottomCard: AnimatedCardView) {
         if (animationState.isAnimating || isRotated) return
 
-        animationState = CardSwapAnimationState(true, 1)
+        animationState = CardSwapAnimationState(isAnimating = true, step = MOVE_RIGHT)
 
         bottomCard.moveCardRight {
-            animationState = CardSwapAnimationState(true, 2)
+            animationState = CardSwapAnimationState(isAnimating = true, step = MOVE_TO_TOP)
             bringCardToFront(bottomCard)
             bottomCard.moveCardToTop {
-                animationState = CardSwapAnimationState(true, 3)
+                animationState = CardSwapAnimationState(isAnimating = true, step = FINAL_ROTATION)
                 reorderCardsData()
                 animateAllCardsToFinalPositions()
             }

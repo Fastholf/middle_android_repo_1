@@ -15,6 +15,9 @@ import ru.yandexpraktikum.cardsanimation.model.CardData
 import ru.yandexpraktikum.cardsanimation.ui.AnimParams.OFFSET_THRESHOLD_PX
 import ru.yandexpraktikum.cardsanimation.ui.AppMath
 import ru.yandexpraktikum.cardsanimation.ui.CardSwapAnimationState
+import ru.yandexpraktikum.cardsanimation.ui.CardSwapAnimationStep.FINAL_ROTATION
+import ru.yandexpraktikum.cardsanimation.ui.CardSwapAnimationStep.MOVE_RIGHT
+import ru.yandexpraktikum.cardsanimation.ui.CardSwapAnimationStep.MOVE_TO_TOP
 import kotlin.math.abs
 
 
@@ -45,7 +48,7 @@ fun AnimatedCardStack(cards: List<CardData>) {
                                     animationState =
                                         CardSwapAnimationState(
                                             isAnimating = true,
-                                            animationStep = 1
+                                            step = MOVE_RIGHT
                                         )
                                 }
                             }
@@ -62,21 +65,32 @@ fun AnimatedCardStack(cards: List<CardData>) {
                 val targetRotation = AppMath.cardRotation(isRotated, i, orderedCards.size)
 
                 // Перед началом 3 этапа мы поместили нижнюю карту наверх
-                val cardCount = orderedCards.lastIndex
-                val isMovingCard = i == (if (animationState.animationStep == 3) cardCount else 0)
+                val movingCardIndex = if (animationState.step.isFinalRotation) {
+                    orderedCards.lastIndex
+                } else {
+                    0
+                }
+                val isMovingCard = i == movingCardIndex
 
                 AnimatedCard(
                     cardIndex = i,
                     targetRotation = targetRotation,
                     cardData = cardData,
                     isAnimating = if (isMovingCard) animationState.isAnimating else false,
-                    animationStep = animationState.animationStep,
+                    animationStep = animationState.step,
                     onAnimationStepComplete = { completedStep ->
                         animationState = when (completedStep) {
-                            1 -> CardSwapAnimationState(isAnimating = true, animationStep = 2)
-                            2 -> {
+                            MOVE_RIGHT -> CardSwapAnimationState(
+                                isAnimating = true,
+                                step = MOVE_TO_TOP
+                            )
+
+                            MOVE_TO_TOP -> {
                                 orderedCards = reorderCards(orderedCards)
-                                CardSwapAnimationState(isAnimating = true, animationStep = 3)
+                                CardSwapAnimationState(
+                                    isAnimating = true,
+                                    step = FINAL_ROTATION
+                                )
                             }
 
                             else -> CardSwapAnimationState()
