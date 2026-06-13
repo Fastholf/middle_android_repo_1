@@ -1,5 +1,8 @@
 package ru.yandexpraktikum.cardsanimation.compose
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateOffsetAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -7,31 +10,91 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import ru.yandexpraktikum.cardsanimation.R
 import ru.yandexpraktikum.cardsanimation.model.CardData
+import ru.yandexpraktikum.cardsanimation.ui.AnimParams.FAN_DURATION_MS
+import ru.yandexpraktikum.cardsanimation.ui.AnimParams.REORDER_STEP_DURATION_MS
+import ru.yandexpraktikum.cardsanimation.ui.CardSwapAnimationStep
+import ru.yandexpraktikum.cardsanimation.ui.CardSwapAnimationStep.FINAL_ROTATION
+import kotlin.math.cos
+import kotlin.math.sin
 
 @Composable
 fun AnimatedCard(
     cardIndex: Int,
     cardData: CardData,
-    targetRotation: Float
+    targetRotation: Float,
+    isAnimating: Boolean,
+    animationStep: CardSwapAnimationStep,
+    onAnimationStepComplete: ((CardSwapAnimationStep) -> Unit)?
 ) {
-    // TODO: [Задание 1] Добавьте анимацию поворота карты
-    // Подсказка: используйте animateFloatAsState для плавной анимации
+    val rotateDuration = if (animationStep.isFinalRotation) {
+        REORDER_STEP_DURATION_MS
+    } else {
+        FAN_DURATION_MS
+    }
+    val animatedRotation by animateFloatAsState(
+        targetValue = targetRotation,
+        animationSpec = tween(durationMillis = rotateDuration),
+        finishedListener = {
+            if (isAnimating && animationStep.isFinalRotation) {
+                onAnimationStepComplete?.invoke(FINAL_ROTATION)
+            }
+        },
+        label = "rotation"
+    )
+
+    val targetTranslation = if (isAnimating && animationStep.isMoveRight) {
+        val moveDistance = with(LocalDensity.current) {
+            dimensionResource(R.dimen.reorder_first_translation).toPx()
+        }
+        val rotationRad = Math.toRadians(targetRotation.toDouble())
+        Offset(
+            x = moveDistance * cos(rotationRad).toFloat(),
+            y = moveDistance * sin(rotationRad).toFloat()
+        )
+    } else {
+        Offset(x = 0f, y = 0f)
+    }
+    val animatedTranslation by animateOffsetAsState(
+        targetValue = targetTranslation,
+        animationSpec = tween(durationMillis = REORDER_STEP_DURATION_MS),
+        finishedListener = {
+            if (isAnimating && animationStep.movesCard) {
+                onAnimationStepComplete?.invoke(animationStep)
+            }
+        },
+        label = "cardTranslation"
+    )
+
+    var cardModifier = Modifier
+        .size(
+            width = dimensionResource(R.dimen.card_width),
+            height = dimensionResource(R.dimen.card_height)
+        )
+        .graphicsLayer {
+            rotationZ = animatedRotation
+            transformOrigin = TransformOrigin(0.5f, 1.0f)
+            translationX = if (isAnimating && animationStep.movesCard) animatedTranslation.x else 0f
+            translationY = if (isAnimating && animationStep.movesCard) animatedTranslation.y else 0f
+        }
+
+    val shouldBringToFront = isAnimating && animationStep.isMoveToTop
+    if (shouldBringToFront) cardModifier = cardModifier.zIndex(1000f)
 
     Card(
-        modifier = Modifier
-            .size(width = 100.dp, height = 160.dp)
-            // TODO: [Задание 5] Добавьте анимацию карты при свайпе вправо или влево
-            .graphicsLayer {
-                rotationZ = targetRotation
-                transformOrigin = TransformOrigin(0.5f, 1.0f)
-            },
+        modifier = cardModifier,
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(
             defaultElevation = (4 + cardIndex).dp
