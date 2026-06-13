@@ -1,5 +1,7 @@
 package ru.yandexpraktikum.cardsanimation.ui
 
+import androidx.compose.runtime.Immutable
+
 enum class CardSwapAnimationStep {
     IDLE,
     MOVE_RIGHT,
@@ -19,6 +21,7 @@ enum class CardSwapAnimationStep {
         get() = this == FINAL_ROTATION
 }
 
+@Immutable
 data class CardSwapAnimationState(
     val isAnimating: Boolean = false,
     val step: CardSwapAnimationStep = CardSwapAnimationStep.IDLE
